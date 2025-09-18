@@ -2,7 +2,7 @@ import sys
 import math
 
 if len(sys.argv) < 2:
-    print('Usage: ksan 計算式')
+    print('Usage: ksan.py 計算式')
 
 else:
     try:
