@@ -3,7 +3,7 @@ import math
 
 if len(sys.argv) < 2:
     print('Usage: ksan 計算式')
-    exit(0)
+
 else:
     try:
         exp = ' '.join(map(str, sys.argv[1:]))
