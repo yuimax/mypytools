@@ -1,0 +1,22 @@
+# myftp_conf.toml (SAMPLE)
+
+["ftp.local"]
+host    = "localhost"
+port    = 2121
+user    = "YOUR-NAME"
+passwd  = "YOUR-PASSWD"
+root    = "/"
+
+["YOUR-NAME.sakura.ne.jp"]
+host    = "YOUR-NAME.sakura.ne.jp"
+port    = 21
+user    = "YOUR-NAME"
+passwd  = "YOUR-PASSWD"
+root    = "/home/YOUR-NAME/www/"
+
+["YOUR-NAME.web.fc2.com"]
+host    = "ACTIVE-MODE-HOSTNAME.web.fc2.com"
+port    = 21
+user    = "YOUR-NAME"
+passwd  = "YOUR-PASSWD"
+root    = "/"
