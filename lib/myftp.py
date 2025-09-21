@@ -22,8 +22,9 @@ FtpConfig = collections.namedtuple('FtpConfig', ['host', 'port', 'user', 'passwd
 
 
 # FTPサーバー情報を設定ファイルから読み出す
+# 設定ファイル名は環境変数 MYFTP_CONF から取得（デフォルトは "myftp_conf.toml"）
 def load_config() -> dict[str, FtpConfig]:
-    config_file = 'myftp_conf.toml'
+    config_file = os.environ.get('MYFTP_CONF', 'myftp_conf.toml')
     config_path = join_path(os.path.dirname(__file__), config_file)
     with open(config_path, 'rb') as f:
         config_data = tomllib.load(f)
@@ -40,15 +41,16 @@ _ftp_configs = load_config()
 
 # 有効なFTPサーバー名のリストを得る
 def get_ftp_names():
-    return list(_ftp_configs.keys())
+    return sorted(list(_ftp_configs.keys()))
 
 
 # 指定した名前のFTPサーバーの情報を得る
-def get_ftp_config(name: str):
+def get_ftp_config(name):
     if name in _ftp_configs:
         return _ftp_configs[name]
     else:
-        raise Exception(f"ERROR: myftp.get_ftp_config('{name}'): not in {et_ftp_names()}")
+        good_names = '\n  '.join(get_ftp_names())
+        raise Exception(f"myftp.get_ftp_config('{name}'): '{name}' is not a valid name.\navaiable names:\n  {good_names}")
 
 
 # Verboseモード
@@ -57,8 +59,6 @@ _is_verbose = False
 
 # Verboseモードの設定
 def verbose(flag):
-    # メモ：　グローバル変数を変更する場合は global 宣言が必要
-    # （global 宣言なしで代入すると関数内ローカル変数が作られる）
     global _is_verbose
     return (_is_verbose := bool(flag))
 
@@ -76,7 +76,11 @@ def login(server_name):
     ftp_config = get_ftp_config(server_name)
     (host, port, user, passwd, root) = ftp_config
     try:
-        if 'fc2.com' in host:
+        if server_name == 'ftp.local':
+            # テスト用のローカルFTPサーバー
+            # 同梱の ../bin/ftp-server.py で起動する
+            ftp = ftplib.FTP()
+        elif 'fc2.com' in host:
             # fc2 はTLSログインできないので ftplib.FPS クラスを使う
             # 平文でパスワードを送るのでセキュリティ的に問題あり
             ftp = ftplib.FTP()
@@ -86,14 +90,14 @@ def login(server_name):
             my_context.set_ciphers('DEFAULT@SECLEVEL=1')
             ftp = ftplib.FTP_TLS(context=my_context)
         else:
-            # 上記以外（sakura.ne.jp と lolipop.jp）はTLSログイン可能
+            # 上記以外は通常のセキュリティでTLSログインする
             ftp = ftplib.FTP_TLS()
         ftp.ftp_config = ftp_config
         ftp.connect(host, port)
         ftp.login(user, passwd)
         return ftp
     except Exception as ex:
-        raise Exception(f"ERROR: myftp.login(): {ex}")
+        raise Exception(f"myftp.login('{server_name}'): {ex}")
 
 
 # FTPサーバーの指定したディレクトリに移動する
@@ -132,7 +136,7 @@ def get_timestr(local_path):
 
 
 # ファイルをアップロードし、タイムスタンプをローカルに合わせる
-def upload(ftp, local_path, ftp_path):
+def upload_one(ftp, local_path, ftp_path):
     try:
         # リモートディレクトリがなければ作る
         ftp_dir = os.path.dirname(ftp_path)
@@ -146,7 +150,7 @@ def upload(ftp, local_path, ftp_path):
         mfmt_timestr = get_timestr(local_path)
 
     except Exception as ex:
-        raise Exception(f"ERROR: myftp.upload({ftp.host}, {local_path}, {ftp_path}): {ex}")
+        raise Exception(f"myftp.upload_one({ftp.host}, {local_path}, {ftp_path}): {ex}")
 
     try:
         # MFMTコマンドでFTP側のタイムスタンプを設定する
@@ -196,7 +200,7 @@ def download(ftp, local_path, ftp_path):
         vprint(f"download: {ftp_path} -> {local_path}")
 
     except Exception as ex:
-        raise Exception(f"ERROR: myftp.download({ftp.host}, {local_path}, {ftp_path}): {ex}")
+        raise Exception(f"myftp.download({ftp.host}, {local_path}, {ftp_path}): {ex}")
 
 
 # ファイルリストのソートキー
@@ -215,7 +219,7 @@ def upload_files(ftp, local_dir, files, title):
         for file in files:
             local_path = join_path(local_dir, file)
             ftp_path = join_path(ftp.ftp_config.root, local_path)
-            upload(ftp, local_path, ftp_path)
+            upload_one(ftp, local_path, ftp_path)
             count += 1
         print(f"{count} uploaded")
 
@@ -381,7 +385,7 @@ def mirror(server_name, local_dir, remote_only_op):
     print(f"{'=' * 40} mirror('{server_name}', '{local_dir}', {remote_only_op})")
 
     # .ftpignore ファイルを読み込む
-    common_ignore = join_path(get_home_dir(), "mypylibs/.ftpignore")
+    common_ignore = join_path(get_home_dir(), "mypytools/.ftpignore")
     local_ignore = join_path(local_dir, '.ftpignore')
     ignore_patterns = load_ignore_list([common_ignore, local_ignore])
 
@@ -418,9 +422,41 @@ def mirror(server_name, local_dir, remote_only_op):
     print("done")
 
 
+
+# ローカルが新しい場合のみFTPサーバーにアップロードする
+def upload_tree(server_name, local_dir):
+    print(f"{'=' * 40} upload_tree('{server_name}', '{local_dir}')")
+
+    # .ftpignore ファイルを読み込む
+    common_ignore = join_path(get_home_dir(), "mypytools/.ftpignore")
+    local_ignore = join_path(local_dir, '.ftpignore')
+    ignore_patterns = load_ignore_list([common_ignore, local_ignore])
+
+    with login(server_name) as ftp:
+        # ローカルのファイル一覧（パスと更新時刻）を得る
+        local_files = get_local_file_list(local_dir, ignore_patterns)
+
+        # リモートのファイル一覧（パスと更新時刻）を得る
+        ftp_dir = join_path(ftp.ftp_config.root, local_dir)
+        remote_files = get_remote_file_list(ftp, ftp_dir, ignore_patterns)
+
+        # ローカルとリモートの情報を比較して5種類に分類する
+        files = compare_keys(local_files, remote_files)
+
+        # 変化していないファイルを表示する
+        show_count(ftp, files["src_same"], "----- check same")
+
+        # ローカル側が新しいか、FTP側に存在しないファイルをアップロードする
+        upload_files(ftp, local_dir, files["src_new"] + files["src_only"], "----- upload")
+
+    # 終了メッセージ
+    print("done")
+
+
+
 # FTPサーバーのディレクトリツリーを全削除する
-def rmtree(server_name, target_dir):
-    print(f"{'=' * 40} rmtree('{server_name}', '{target_dir}')")
+def remove_tree(server_name, target_dir):
+    print(f"{'=' * 40} remove_tree('{server_name}', '{target_dir}')")
 
     # FTPのディレクトリを再帰的に削除する
     def rmtree_recursive(cur_path):
@@ -440,7 +476,7 @@ def rmtree(server_name, target_dir):
             vprint(f"rmd: {cur_path}")
         except ftplib.error_perm as e:
             # アクセスできないディレクトリは無視
-            print(f"CAUTION: {e}")
+            print(f"CAUTION: remove_tree('{server_name}', '{target_dir}'): {e}")
         return count
 
     # FTPサーバーにログインし、ディレクトリツリーを削除する
@@ -448,6 +484,42 @@ def rmtree(server_name, target_dir):
         ftp_dir = join_path(ftp.ftp_config.root, target_dir)
         count = rmtree_recursive(ftp_dir)
         print(f"{count} deleted")
+
+    # 終了メッセージ
+    print("done")
+
+
+# FTPサーバーのディレクトリのエントリ一覧を表示する
+def ls(server_name, target_dir):
+    print(f"{'=' * 40} ls('{server_name}', '{target_dir}')")
+
+    # FTPサーバーにログインし、ディレクトリのエントリ一覧を表示する
+    with login(server_name) as ftp:
+        ftp_dir = join_path(ftp.ftp_config.root, target_dir)
+        cwd(ftp, ftp_dir)
+        list_data = []
+        ftp.dir(list_data.append)
+        for line in list_data:
+            print(line)
+
+    # 終了メッセージ
+    print("done")
+
+# FTPサーバーのディレクトリのエントリ一覧を表示する
+def mlsd(server_name, target_dir):
+    print(f"{'=' * 40} mlsd('{server_name}', '{target_dir}')")
+
+    # FTPサーバーにログインし、ディレクトリのエントリ一覧を表示する
+    with login(server_name) as ftp:
+        ftp_dir = join_path(ftp.ftp_config.root, target_dir)
+        try:
+            for name, facts in ftp.mlsd(ftp_dir):
+                full_name = join_path(ftp_dir, name)
+                print(full_name, facts)
+        except ftplib.error_perm as e:
+            # アクセスできないディレクトリは無視
+            print(f"CAUTION: {e}")
+            
 
     # 終了メッセージ
     print("done")
