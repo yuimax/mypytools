@@ -1,4 +1,4 @@
-# pip install pyftpdpib
+# pip install pyftpdlib
 
 from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.handlers import FTPHandler
