@@ -7,14 +7,18 @@ import cv2
 import math
 from PIL import Image
 
+class BadFormatError(Exception):
+    pass
+    
+
 def get_video_info(video_path):
     if is_image_file(video_path):
-        raise UserWarning("invalid video format")
+        raise BadFormatError()
         
     cap = cv2.VideoCapture(video_path)
 
     if not cap.isOpened():
-        raise UserWarning("invalid video format")
+        raise BadFormatError()
 
     width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -58,8 +62,8 @@ if __name__ == '__main__':
         try:
             (width, height, fps, frames, time) = get_video_info(path)
             print(f"{width:5} {height:5} {fps:5} {frames:6} {time:5}  {path}")
-        except UserWarning as e:
-            # 有効な動画形式でない場合
-            print(f"{'////// not video ///////':24}  {path}")
+        except BadFormatError:
+            # 有効な動画形式でない
+            print(f"////////// not video /////////  {path}")
         except Exception as e:
             print(f"ERROR: {e}")
