@@ -5,6 +5,6 @@
 |ファイル|説明|備考|
 |:---|:---|:---|
 |[ftp-server.py](ftp-server.py)|ローカルFTPサーバー|FTP関連プログラムの動作テスト用|
-|[image-info.py](video-info.py)|画像情報|画像の 形式,幅,高さ を表示する|
+|[image-info.py](image-info.py)|画像情報|画像の 形式,幅,高さ を表示する|
 |[ksan.py](ksan.py)|簡易計算機|入力をeval()で評価し表示するだけ|
 |[video-info.py](video-info.py)|動画情報|動画の 幅,高さ,FPS,フレーム数,視聴時間 を表示する|
