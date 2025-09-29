@@ -4,6 +4,7 @@
 
 |ファイル|説明|備考|
 |:---|:---|:---|
+|[bom.py](bom.py)|UTF-8ファイルのBOMを処理する|BOMのチェック、除去、付加|
 |[ftp-server.py](ftp-server.py)|ローカルFTPサーバー|FTP関連プログラムの動作テスト用|
 |[image-info.py](image-info.py)|画像情報|画像の 形式,幅,高さ を表示する|
 |[ksan.py](ksan.py)|簡易計算機|入力をeval()で評価し表示するだけ|
