@@ -14,8 +14,8 @@
 |[ksan.py](bin/ksan.py)|簡易計算機|入力をeval()で評価し表示するだけ|
 |[urldecode.py](bin/urldecode.py)|URLデコーダー|URLエンコード文字列をデコードする|
 |[video-info.py](bin/video-info.py)|動画情報|動画の 幅,高さ,FPS,フレーム数,視聴時間 を表示する|
-|[wav-cut](bin/wav-cut.py)|音声切り出し|WAVファイルの指定範囲を切り出す|
-|[wav-delay](bin/wav-delay.py)|音声遅らせ|WAVファイルの先頭に無音を挿入|
+|[wav-cut.py](bin/wav-cut.py)|音声切り出し|WAVファイルの指定範囲を切り出す|
+|[wav-delay.py](bin/wav-delay.py)|音声遅らせ|WAVファイルの先頭に無音を挿入|
 |[wipe.py](bin/wipe.py)|指定したファイルを0バイトにする|元のファイルはゴミ箱に移動する|
 
 
