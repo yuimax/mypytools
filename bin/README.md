@@ -10,3 +10,4 @@
 |[ksan.py](ksan.py)|簡易計算機|入力をeval()で評価し表示するだけ|
 |[urldecode.py](urldecode.py)|URLデコーダー|URLエンコード文字列をデコードする|
 |[video-info.py](video-info.py)|動画情報|動画の 幅,高さ,FPS,フレーム数,視聴時間 を表示する|
+|[wipe.py](wipe.py)|指定したファイルを0バイトにする|元のファイルはゴミ箱に移動する|
