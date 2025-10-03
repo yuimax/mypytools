@@ -6,6 +6,8 @@
 * [lib](lib)/ -- モジュール用フォルダ： 環境変数 PYTHONPATH に登録しておく
 * [test](test)/ -- テスト用のバッチファイルなど
 
+|bin/コマンド|説明|備考|
+|:---|:---|:---|
 |[bom.py](bin/bom.py)|UTF-8ファイルのBOMを処理する|BOMのチェック、除去、付加|
 |[ftp-server.py](bin/ftp-server.py)|ローカルFTPサーバー|FTP関連プログラムの動作テスト用|
 |[image-info.py](bin/image-info.py)|画像情報|画像の 形式,幅,高さ を表示する|
