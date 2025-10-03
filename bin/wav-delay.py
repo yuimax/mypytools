@@ -1,4 +1,4 @@
-# pip install scipy.io
+# pip install numpy scipy
 
 import numpy as np
 from scipy.io import wavfile

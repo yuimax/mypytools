@@ -1,4 +1,3 @@
-# 必要モジュール：
 # pip install numpy scipy
 
 import argparse
